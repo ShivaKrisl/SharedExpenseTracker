@@ -16,9 +16,8 @@ namespace ExpenseTracker.Core.DTOs
         [Required]
         public List<Guid> UserIds { get; set; } = new List<Guid>();
 
-        [ForeignKey(nameof(CreatedByUser))]
+        [Required]
         public Guid CreatedByUserId { get; set; }
-        public User? CreatedByUser { get; set; }
     }
 
     public static class SharedExpenseExtensions
@@ -31,7 +30,6 @@ namespace ExpenseTracker.Core.DTOs
                 SharedExpenseName = sharedExpense.SharedExpenseName,
                 UserIds = sharedExpense.UserIds,
                 CreatedByUserId = sharedExpense.CreatedByUserId,
-                CreatedByUser = sharedExpense.CreatedByUser
             };
         }
 

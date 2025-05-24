@@ -1,6 +1,4 @@
-﻿
-using ExpenseTracker.Core.Domain.Entities;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using ExpenseTracker.Core.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 
 namespace ExpenseTracker.Core.DTOs

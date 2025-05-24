@@ -8,7 +8,7 @@ namespace ExpenseTracker.Core.DTOs
 {
     public enum ExpenseType
     {
-        INCOME,
-        EXPENSE,
+        Income,
+        Expense,
     }
 }

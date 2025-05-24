@@ -7,7 +7,7 @@ namespace ExpenseTracker.Core.Service_Classes
 {
     public class UserService : IUserService
     {
-        private readonly List<User> _users;
+        private  List<User> _users;
 
         public UserService() {
             _users = new List<User>();

@@ -42,5 +42,14 @@ namespace ExpenseTracker.Core.Service_Interfaces
         /// <param name="expenseId"></param>
         /// <returns></returns>
         public Task<bool> DeleteExpense(Guid expenseId);
+
+        /// <summary>
+        /// Sort the expenses
+        /// </summary>
+        /// <param name="expenseResponses"></param>
+        /// <param name="sortBy"></param>
+        /// <param name="sortOrder"></param>
+        /// <returns></returns>
+        public Task<IEnumerable<ExpenseResponse>> SortExpenses(IEnumerable<ExpenseResponse> expenseResponses, string? sortBy, SortOrder? sortOrder);
     }
 }

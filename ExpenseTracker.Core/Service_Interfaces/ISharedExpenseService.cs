@@ -13,14 +13,13 @@ namespace ExpenseTracker.Core.Service_Interfaces
         public Task<SharedExpenseResponse> CreateSharedExpense(SharedExpenseRequest request);
 
         /// <summary>
-        /// Retrieves shared expenses by ID.
+        /// Retrieves shared expenses.
         /// </summary>
-        /// <param name="sharedExpenseId"></param>
         /// <returns></returns>
-        public Task<SharedExpenseResponse?> GetSharedExpenseById(Guid sharedExpenseId);
+        public Task<IEnumerable<SharedExpenseResponse>?> GetSharedExpenses();
 
         /// <summary>
-        /// Retrieves all shared expenses.
+        /// Retrieves all shared expenses of a User.
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
@@ -30,7 +29,15 @@ namespace ExpenseTracker.Core.Service_Interfaces
         /// Deletes an existing shared expense.
         /// </summary>
         /// <param name="sharedExpenseId"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
-        public Task<bool> DeleteSharedExpense(Guid sharedExpenseId);
+        public Task<bool> DeleteSharedExpense(Guid sharedExpenseId, Guid userId);
+
+        /// <summary>
+        /// Loads the shared Expense 
+        /// </summary>
+        /// <param name="sharedExpenseId"></param>
+        /// <returns></returns>
+        public Task<IEnumerable<ExpenseResponse>?> LoadSharedExpense(Guid sharedExpenseId);
     }
 }
