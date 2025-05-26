@@ -1,5 +1,9 @@
+using ExpenseTracker.Core.Domain.Repository_Interfaces;
 using ExpenseTracker.Core.Service_Classes;
 using ExpenseTracker.Core.Service_Interfaces;
+using ExpenseTracker.Infrastructure;
+using ExpenseTracker.Infrastructure.Repository_Classes;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,9 +14,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<IUserService, UserService>();
-builder.Services.AddSingleton<IExpenseService, ExpenseService>();
-builder.Services.AddSingleton<ISharedExpenseService, SharedExpenseService>();
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    });
+}
+
+builder.Services.AddScoped<IUserRepository, UsersRepository>();
+builder.Services.AddScoped<IExpenseRepository, ExpensesRepository>();
+builder.Services.AddScoped<ISharedExpenseRepository, SharedExpensesRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddScoped<ISharedExpenseService, SharedExpenseService>();
 
 var app = builder.Build();
 

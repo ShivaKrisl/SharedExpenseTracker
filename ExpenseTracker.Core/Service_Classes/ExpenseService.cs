@@ -1,4 +1,4 @@
-﻿using ExpenseTracker.Core.Domain.Entities;
+﻿using ExpenseTracker.Core.Domain.Repository_Interfaces;
 using ExpenseTracker.Core.DTOs;
 using ExpenseTracker.Core.Service_Interfaces;
 using ExpenseTracker.Core.ValidationHelpers;
@@ -7,13 +7,13 @@ namespace ExpenseTracker.Core.Service_Classes
 {
     public class ExpenseService : IExpenseService
     {
-
-        private List<Expense> _expenses;
         private readonly IUserService _userService;
 
-        public ExpenseService(IUserService userService)
+        private readonly IExpenseRepository _expenseRepository;
+
+        public ExpenseService(IUserService userService, IExpenseRepository expenseRepository)
         {
-            _expenses = new List<Expense>();
+            _expenseRepository = expenseRepository;
             _userService = userService;
         }
 
@@ -47,11 +47,10 @@ namespace ExpenseTracker.Core.Service_Classes
                 throw new ArgumentException("User Not Found!!", nameof(expenseRequest));
             }
 
-            Expense expense = expenseRequest.ToExpense();
+            var expense = expenseRequest.ToExpense();
             expense.ExpenseId = Guid.NewGuid();
             expense.DateOfCreation = DateTime.UtcNow;
-            
-            _expenses.Add(expense);
+            expense  = await _expenseRepository.CreateExpense(expense);
             return expense.ToExpenseResponse();
         }
 
@@ -68,16 +67,8 @@ namespace ExpenseTracker.Core.Service_Classes
                 throw new ArgumentNullException(nameof(expenseId), "Invalid Id");
             }
 
-            Expense? expense = _expenses.FirstOrDefault(e => e.ExpenseId == expenseId);
-
-            if (expense == null)
-            {
-                return false;
-            }
-
-            _expenses.Remove(expense);
-
-            return true;
+            bool isDeleted = await _expenseRepository.DeleteExpense(expenseId);
+            return isDeleted;
         }
 
         /// <summary>
@@ -86,13 +77,12 @@ namespace ExpenseTracker.Core.Service_Classes
         /// <returns></returns>
         public async Task<IEnumerable<ExpenseResponse>> GetAllExpenses()
         {
-            if (!_expenses.Any())
+            var expenses = await _expenseRepository.GetAllExpenses();
+            if (expenses == null || expenses.Count == 0)
             {
                 return new List<ExpenseResponse>();
             }
-
-            var expenseResponses = _expenses.Select(e => e.ToExpenseResponse()).ToList();
-            return expenseResponses;
+            return expenses.Select(e => e.ToExpenseResponse()).ToList();
         }
 
         /// <summary>
@@ -108,7 +98,7 @@ namespace ExpenseTracker.Core.Service_Classes
                 throw new ArgumentNullException(nameof(expenseId), "Invalid Id");
             }
 
-            Expense? expense = _expenses.FirstOrDefault(e => e.ExpenseId == expenseId);
+            var expense = await _expenseRepository.GetExpenseById(expenseId);
 
             if(expense == null)
             {
@@ -136,8 +126,12 @@ namespace ExpenseTracker.Core.Service_Classes
                 return new List<ExpenseResponse>();
             }
 
-            var expenses = _expenses.Where(e => e.UserId == userId).Select(p => p.ToExpenseResponse()).ToList();
-            return expenses;
+            var expenses = await _expenseRepository.GetExpensesOfUser(userId);
+            if(expenses == null || expenses.Count == 0)
+            {
+                return new List<ExpenseResponse>();
+            }
+            return expenses.Select(e => e.ToExpenseResponse()).ToList();
         }
 
         /// <summary>

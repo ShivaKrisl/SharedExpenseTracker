@@ -1,4 +1,5 @@
 ﻿using ExpenseTracker.Core.Domain.Entities;
+using ExpenseTracker.Core.Domain.Repository_Interfaces;
 using ExpenseTracker.Core.DTOs;
 using ExpenseTracker.Core.Service_Interfaces;
 using ExpenseTracker.Core.ValidationHelpers;
@@ -9,21 +10,21 @@ namespace ExpenseTracker.Core.Service_Classes
     public class SharedExpenseService : ISharedExpenseService
     {
         private readonly IUserService _userService;
-        private List<SharedExpense> _sharedExpenses;
         private readonly IExpenseService _expenseService;
+        private readonly ISharedExpenseRepository _sharedExpenseRepository;
 
-        public SharedExpenseService(IUserService userService, IExpenseService expenseService)
+        public SharedExpenseService(IUserService userService, IExpenseService expenseService, ISharedExpenseRepository sharedExpenseRepository)
         {
             _userService = userService;
-            _sharedExpenses = new List<SharedExpense>();
+            _sharedExpenseRepository = sharedExpenseRepository;
             _expenseService = expenseService;
         }
 
-       // Future goal:
-       /*
-        * If Participant want to leave that sharedExpense => Update shared Expense by deleting that Id
-        * in participants list
-        */
+        // Future goal:
+        /*
+         * If Participant want to leave that sharedExpense => Update shared Expense by deleting that Id
+         * in participants list
+         */
 
         private async Task<bool> CheckIfUserIsValid(List<Guid> userIds)
         {
@@ -32,10 +33,10 @@ namespace ExpenseTracker.Core.Service_Classes
                 return false;
             }
 
-            foreach(var id in userIds)
+            foreach (var id in userIds)
             {
                 UserResponse? userResponse = await _userService.GetUserById(id);
-                if(userResponse == null)
+                if (userResponse == null)
                 {
                     return false;
                 }
@@ -64,8 +65,9 @@ namespace ExpenseTracker.Core.Service_Classes
             }
 
             // check if sharedExpenseName already exists
-            var nameExits = _sharedExpenses.FirstOrDefault(s => s.SharedExpenseName.ToLower().Equals(request.SharedExpenseName.ToLower()));
-            if (nameExits != null){
+            var nameExits = await _sharedExpenseRepository.GetSharedExpenseByName(request.SharedExpenseName);
+
+            if (nameExits != null) {
                 throw new ArgumentException("Name is already taken!!", nameof(request.SharedExpenseName));
             }
 
@@ -78,7 +80,7 @@ namespace ExpenseTracker.Core.Service_Classes
 
             // check if added users are unique
             HashSet<Guid> users = new HashSet<Guid>(request.UserIds);
-            if(users.Count != request.UserIds.Count)
+            if (users.Count != request.UserIds.Count)
             {
                 throw new ArgumentException("Duplicate Users found!!", nameof(request.UserIds));
             }
@@ -93,13 +95,13 @@ namespace ExpenseTracker.Core.Service_Classes
             bool validUsers = await this.CheckIfUserIsValid(request.UserIds);
             if (!validUsers)
             {
-                throw new ArgumentException("One or More User doesnot exits!!",nameof(request.UserIds));
+                throw new ArgumentException("One or More User doesnot exits!!", nameof(request.UserIds));
             }
 
-            SharedExpense sharedExpense = request.ToSharedExpense();
+            var sharedExpense = request.ToSharedExpense();
             sharedExpense.SharedExpenseId = Guid.NewGuid();
 
-            _sharedExpenses.Add(sharedExpense);
+            sharedExpense = await _sharedExpenseRepository.CreateSharedExpense(sharedExpense);
 
             return sharedExpense.ToSharedExpenseResponse();
 
@@ -115,23 +117,23 @@ namespace ExpenseTracker.Core.Service_Classes
         /// <exception cref="ArgumentException"></exception>
         public async Task<bool> DeleteSharedExpense(Guid sharedExpenseId, Guid userId)
         {
-            if(sharedExpenseId == Guid.Empty)
+            if (sharedExpenseId == Guid.Empty)
             {
                 throw new ArgumentNullException("Invalid Id", nameof(sharedExpenseId));
             }
 
-            var sharedExpense = _sharedExpenses.FirstOrDefault(s => s.SharedExpenseId == sharedExpenseId);
+            var sharedExpense = await _sharedExpenseRepository.GetSharedExpenseById(sharedExpenseId);
             if (sharedExpense == null)
             {
                 return false;
             }
 
-            if(sharedExpense.CreatedByUserId != userId)
+            if (sharedExpense.CreatedByUserId != userId)
             {
                 throw new ArgumentException("Only creater has permission to delete this!!", nameof(userId));
             }
 
-            _sharedExpenses.Remove(sharedExpense);
+            bool isDeleted = await _sharedExpenseRepository.DeleteSharedExpense(sharedExpenseId);
             return true;
         }
 
@@ -142,13 +144,12 @@ namespace ExpenseTracker.Core.Service_Classes
         /// <exception cref="ArgumentNullException"></exception>
         public async Task<IEnumerable<SharedExpenseResponse>?> GetSharedExpenses()
         {
-            if (!_sharedExpenses.Any())
+            var sharedExpenses = await _sharedExpenseRepository.GetSharedExpenses();
+            if (sharedExpenses == null || sharedExpenses.Count == 0)
             {
                 return new List<SharedExpenseResponse>();
             }
-
-            var sharedExpenses = _sharedExpenses.Select(s => s.ToSharedExpenseResponse()).ToList();
-            return sharedExpenses;
+            return sharedExpenses.Select(s => s.ToSharedExpenseResponse()).ToList();
         }
 
         /// <summary>
@@ -172,8 +173,12 @@ namespace ExpenseTracker.Core.Service_Classes
                 throw new ArgumentException("User doesnot exists!!", nameof(userId));
             }
 
-            var sharedExpenses = _sharedExpenses.Where(s => s.CreatedByUserId == userId || s.UserIds.Contains(userId)).Select(s => s.ToSharedExpenseResponse()).ToList();
-            return sharedExpenses;
+            var sharedExpenses = await _sharedExpenseRepository.GetSharedExpensesOfUser(userId);
+            if(sharedExpenses == null)
+            {
+                return new List<SharedExpenseResponse>();
+            }
+            return sharedExpenses.Select(s => s.ToSharedExpenseResponse()).ToList();
         }
 
         /// <summary>
@@ -190,7 +195,7 @@ namespace ExpenseTracker.Core.Service_Classes
                 throw new ArgumentNullException(nameof(sharedExpenseId), "Invalid Id");
             }
 
-            SharedExpense? sharedExpense = _sharedExpenses.FirstOrDefault(s => s.SharedExpenseId == sharedExpenseId);
+            SharedExpense? sharedExpense = await _sharedExpenseRepository.GetSharedExpenseById(sharedExpenseId);
             if(sharedExpense == null)
             {
                 return new List<ExpenseResponse>();

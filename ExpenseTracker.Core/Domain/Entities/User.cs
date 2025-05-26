@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace ExpenseTracker.Core.Domain.Entities
 {
@@ -17,6 +18,8 @@ namespace ExpenseTracker.Core.Domain.Entities
 
         // Navigation properties
         public ICollection<Expense>? Expenses { get; set; } = new List<Expense>();
+
+        [JsonIgnore]
         public ICollection<SharedExpense>? SharedExpenses { get; set; } = new List<SharedExpense>();
     }
 }

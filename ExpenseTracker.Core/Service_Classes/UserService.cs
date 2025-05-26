@@ -1,4 +1,5 @@
 ﻿using ExpenseTracker.Core.Domain.Entities;
+using ExpenseTracker.Core.Domain.Repository_Interfaces;
 using ExpenseTracker.Core.DTOs;
 using ExpenseTracker.Core.Service_Interfaces;
 using ExpenseTracker.Core.ValidationHelpers;
@@ -7,10 +8,11 @@ namespace ExpenseTracker.Core.Service_Classes
 {
     public class UserService : IUserService
     {
-        private  List<User> _users;
 
-        public UserService() {
-            _users = new List<User>();
+        private readonly IUserRepository _userRepository;
+
+        public UserService(IUserRepository userRepository) {
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -22,9 +24,9 @@ namespace ExpenseTracker.Core.Service_Classes
         /// <exception cref="ArgumentException"></exception>
         public async Task<UserResponse> CreateUser(UserRequest userRequest)
         {
-            if(userRequest == null)
+            if (userRequest == null)
             {
-                throw new ArgumentNullException(nameof(userRequest),"Request is null");
+                throw new ArgumentNullException(nameof(userRequest), "Request is null");
             }
 
             bool isModelValid = ValidateModel.IsModelValid(userRequest);
@@ -34,7 +36,7 @@ namespace ExpenseTracker.Core.Service_Classes
             }
 
             // check if email already exists
-            var existingUser = _users.FirstOrDefault(u => u.Email == userRequest.Email);
+            var existingUser = await _userRepository.GetUserByEmail(userRequest.Email);
             if (existingUser != null)
             {
                 throw new ArgumentException("Email already exists", nameof(userRequest));
@@ -42,27 +44,37 @@ namespace ExpenseTracker.Core.Service_Classes
 
             User user = userRequest.ToUser();
             user.UserId = Guid.NewGuid();
-            _users.Add(user);
+            user = await _userRepository.CreateUser(user);
             return user.ToUserResponse();
         }
 
+        /// <summary>
+        /// Get all the users
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<UserResponse>> GetAllUsers()
         {
-            if (!_users.Any())
+            var users = await _userRepository.GetAllUsers();
+            if (users == null || users.Count == 0)
             {
-                return new List<UserResponse>();
+                return new List<UserResponse>();  
             }
-            var userResponses = _users.Select(u => u.ToUserResponse()).ToList();
-            return userResponses;
+            return users.Select(u => u.ToUserResponse()).ToList();
         }
 
+        /// <summary>
+        /// Get user by email
+        /// </summary>
+        /// <param name="userEmail"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public async Task<UserResponse?> GetUserByEmail(string userEmail)
         {
             if(string.IsNullOrEmpty(userEmail))
             {
                 throw new ArgumentNullException(nameof(userEmail), "Email is null or empty");
             }
-            var user = _users.FirstOrDefault(u => u.Email == userEmail);
+            var user = await _userRepository.GetUserByEmail(userEmail);
             if (user == null)
             {
                 return null;
@@ -76,7 +88,7 @@ namespace ExpenseTracker.Core.Service_Classes
             {
                 throw new ArgumentNullException(nameof(userId), "UserId is null or empty");
             }
-            var user = _users.FirstOrDefault(u => u.UserId == userId);
+            var user = await _userRepository.GetUserByUserId(userId);
             if (user == null)
             {
                 return null;
