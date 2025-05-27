@@ -18,12 +18,24 @@ namespace ExpenseTracker.Core.DTOs
         [EmailAddress(ErrorMessage = "Invalid email address")]
         public string? Email { get; set; }
 
-        public User ToUser()
+        [Required]
+        [Phone]
+        public string? Phone { get; set; }
+
+        [Required]
+        public string? Password { get; set; }
+
+        [Required]
+        [Compare("Password", ErrorMessage = "Password and Compare password donot match!")]
+        public string? ConfirmPassword { get; set; }
+
+        public ApplicationUser ToUser()
         {
-            return new User
+            return new ApplicationUser
             {
-                Username = this.Username,
-                Email = this.Email
+                UserName = this.Username,
+                Email = this.Email,
+                PhoneNumber = this.Phone,
             };
         }
     }

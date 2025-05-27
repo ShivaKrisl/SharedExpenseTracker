@@ -19,7 +19,7 @@ namespace ExpenseTracker.Core.DTOs
         [Required]
         public Guid CreatedByUserId { get; set; }
 
-        public User? CreatedByUser { get; set; }
+        public ApplicationUser? CreatedByUser { get; set; }
     }
 
     public static class SharedExpenseExtensions

@@ -1,9 +1,12 @@
 ﻿using ExpenseTracker.Core.DTOs;
 using ExpenseTracker.Core.Service_Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.WebAPI.Controllers
 {
+    [Authorize]
+    //[ValidateAntiForgeryToken]
     public class SharedExpenseController : CustomBaseController
     {
         private readonly ISharedExpenseService _sharedExpenseService;

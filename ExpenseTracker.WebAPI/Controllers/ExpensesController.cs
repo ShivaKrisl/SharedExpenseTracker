@@ -1,10 +1,13 @@
 ﻿using ExpenseTracker.Core.DTOs;
 using ExpenseTracker.Core.Service_Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.WebAPI.Controllers
 {
+    [Authorize]
+    //[ValidateAntiForgeryToken]
     public class ExpensesController : CustomBaseController
     {
         private readonly IExpenseService _expenseService;

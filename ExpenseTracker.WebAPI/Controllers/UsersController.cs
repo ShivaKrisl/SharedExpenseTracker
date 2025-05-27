@@ -1,6 +1,9 @@
-﻿using ExpenseTracker.Core.DTOs;
+﻿using ExpenseTracker.Core.Domain.Entities;
+using ExpenseTracker.Core.DTOs;
 using ExpenseTracker.Core.Service_Interfaces;
-using Microsoft.AspNetCore.Http;
+using ExpenseTracker.WebAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.WebAPI.Controllers
@@ -10,11 +13,19 @@ namespace ExpenseTracker.WebAPI.Controllers
     {
         private readonly IUserService _userService;
 
-        public UsersController(IUserService userService)
+        private readonly SignInManager<ApplicationUser> _signInManager;
+
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public UsersController(IUserService userService, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
         {
             _userService = userService;
+            _signInManager = signInManager;
+            _userManager = userManager;
         }
 
+        [Authorize]
+        //[ValidateAntiForgeryToken]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -30,6 +41,8 @@ namespace ExpenseTracker.WebAPI.Controllers
         }
 
         [HttpGet("id/{userId:guid}")]
+        [Authorize]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> GetUserById(Guid userId)
         {
             try
@@ -48,6 +61,8 @@ namespace ExpenseTracker.WebAPI.Controllers
         }
 
         [HttpGet("email/{email}")]
+        [Authorize]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> GetUserByEmail(string email)
         {
             try
@@ -64,7 +79,8 @@ namespace ExpenseTracker.WebAPI.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateUser([FromBody] UserRequest userRequest)
         {
             if (userRequest == null)
@@ -78,6 +94,44 @@ namespace ExpenseTracker.WebAPI.Controllers
             }catch(Exception ex)
             {
                 return Problem(ex.Message);
+            }
+        }
+
+        [HttpGet("login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Login()
+        {
+            return Unauthorized("Please Login or Register first");
+        }
+
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginUser(LoginDTO loginDTO)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    string errors = string.Join("\n", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList());
+                    return BadRequest(errors);
+                }
+
+                var user = await _userManager.FindByEmailAsync(loginDTO.Email);
+                if(user == null)
+                {
+                    return NotFound($"User not found with Email id: {loginDTO.Email}");
+                }
+
+                var result = await _signInManager.PasswordSignInAsync(user, loginDTO.Password, isPersistent: false, lockoutOnFailure: false);
+                if (!result.Succeeded)
+                {
+                    return Unauthorized("Invalid Email or Password");
+                }
+                return Ok("Login Successfull!!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
     }

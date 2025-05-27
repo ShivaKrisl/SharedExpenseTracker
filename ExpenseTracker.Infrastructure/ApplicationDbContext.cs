@@ -1,15 +1,14 @@
 ﻿using ExpenseTracker.Core.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
 
 namespace ExpenseTracker.Infrastructure
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-
-        public virtual DbSet<User> Users { get; set; }
 
         public virtual DbSet<Expense> Expenses { get; set; }
 

@@ -15,17 +15,22 @@ namespace ExpenseTracker.Core.DTOs
         [Required]
         [EmailAddress(ErrorMessage = "Invalid email address")]
         public string? Email { get; set; }
+
+        [Required]
+        [Phone]
+        public string? Phone { get; set; }
     }
 
     public static class UserExtensions
     {
-        public static UserResponse ToUserResponse(this User user)
+        public static UserResponse ToUserResponse(this ApplicationUser user)
         {
             return new UserResponse
             {
-                UserId = user.UserId,
-                Username = user.Username,
-                Email = user.Email
+                UserId = user.Id,
+                Username = user.UserName,
+                Email = user.Email,
+                Phone = user.PhoneNumber
             };
         }
     }

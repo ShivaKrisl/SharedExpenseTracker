@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ExpenseTracker.Core.Domain.Entities
@@ -28,6 +26,6 @@ namespace ExpenseTracker.Core.Domain.Entities
         public Guid UserId { get; set; }
 
         // Navigation property
-        public User? User { get; set; }
+        public ApplicationUser? User { get; set; }
     }
 }

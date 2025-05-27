@@ -25,6 +25,8 @@ namespace ExpenseTracker.Core.DTOs
         [Required]
         public Guid UserId { get; set; }
 
+        public string? Username { get; set; }
+
     }
 
     public static class ExpenseExtensions
@@ -39,6 +41,7 @@ namespace ExpenseTracker.Core.DTOs
                 Reason = expense.Reason,
                 DateOfCreation = expense.DateOfCreation,
                 UserId = expense.UserId,
+                Username = expense.User.UserName,
             };
         }
     }
