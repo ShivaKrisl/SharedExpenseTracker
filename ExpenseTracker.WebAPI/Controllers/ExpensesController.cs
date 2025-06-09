@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.WebAPI.Controllers
 {
-    [Authorize]
+
     //[ValidateAntiForgeryToken]
     public class ExpensesController : CustomBaseController
     {

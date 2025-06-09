@@ -33,11 +33,11 @@ namespace ExpenseTracker.Infrastructure
             modelBuilder.Entity<SharedExpense>()
             .Property(s => s.UserIds)
             .HasConversion(
-                v => JsonSerializer.Serialize<List<Guid>>(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<List<Guid>>(v, (JsonSerializerOptions?)null) ?? new List<Guid>()
+                v => JsonSerializer.Serialize<List<string>>(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>()
             )
             .Metadata
-            .SetValueComparer(new ValueComparer<List<Guid>>(
+            .SetValueComparer(new ValueComparer<List<string>>(
                 (c1, c2) => c1.SequenceEqual(c2),
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 c => c.ToList()

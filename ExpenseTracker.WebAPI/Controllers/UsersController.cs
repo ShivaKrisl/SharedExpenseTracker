@@ -17,14 +17,16 @@ namespace ExpenseTracker.WebAPI.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public UsersController(IUserService userService, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+        private readonly IJwtService _jwtService;
+
+        public UsersController(IUserService userService, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, IJwtService jwtService)
         {
             _userService = userService;
             _signInManager = signInManager;
             _userManager = userManager;
+            _jwtService = jwtService;
         }
 
-        [Authorize]
         //[ValidateAntiForgeryToken]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
@@ -41,7 +43,6 @@ namespace ExpenseTracker.WebAPI.Controllers
         }
 
         [HttpGet("id/{userId:guid}")]
-        [Authorize]
         //[ValidateAntiForgeryToken]
         public async Task<IActionResult> GetUserById(Guid userId)
         {
@@ -61,7 +62,6 @@ namespace ExpenseTracker.WebAPI.Controllers
         }
 
         [HttpGet("email/{email}")]
-        [Authorize]
         //[ValidateAntiForgeryToken]
         public async Task<IActionResult> GetUserByEmail(string email)
         {
@@ -90,6 +90,7 @@ namespace ExpenseTracker.WebAPI.Controllers
             try
             {
                 var user = await _userService.CreateUser(userRequest);
+                // try auto login after register
                 return CreatedAtAction(nameof(GetUserById), new { userId = user.UserId },user);
             }catch(Exception ex)
             {
@@ -97,6 +98,7 @@ namespace ExpenseTracker.WebAPI.Controllers
             }
         }
 
+        // this is just for sample (when developed front-end remove this)
         [HttpGet("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login()
@@ -123,11 +125,15 @@ namespace ExpenseTracker.WebAPI.Controllers
                 }
 
                 var result = await _signInManager.PasswordSignInAsync(user, loginDTO.Password, isPersistent: false, lockoutOnFailure: false);
-                if (!result.Succeeded)
+                if (result.Succeeded)
                 {
-                    return Unauthorized("Invalid Email or Password");
+                    // creates token 
+                    var authenticationResponse = await _jwtService.CreateJwtToken(user);
+                    return Ok(authenticationResponse);
+                    
                 }
-                return Ok("Login Successfull!!");
+                return Unauthorized("Invalid Email or Password");
+
             }
             catch (Exception ex)
             {

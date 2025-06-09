@@ -14,7 +14,7 @@ namespace ExpenseTracker.Core.Domain.Entities
         public string? SharedExpenseName { get; set; } = string.Empty;
 
         [Required]
-        public List<Guid> UserIds { get; set; } = new List<Guid>();
+        public List<string> UserIds { get; set; } = new List<string>();
 
         [ForeignKey(nameof(CreatedByUser))]
         public Guid CreatedByUserId { get; set; }
