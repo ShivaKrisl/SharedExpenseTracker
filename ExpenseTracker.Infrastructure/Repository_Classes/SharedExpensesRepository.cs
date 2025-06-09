@@ -1,6 +1,7 @@
 ﻿using ExpenseTracker.Core.Domain.Entities;
 using ExpenseTracker.Core.Domain.Repository_Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 
 namespace ExpenseTracker.Infrastructure.Repository_Classes
 {
@@ -79,10 +80,17 @@ namespace ExpenseTracker.Infrastructure.Repository_Classes
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
-        public async Task<List<SharedExpense>?> GetSharedExpensesOfUser(Guid userId)
+        public async Task<List<SharedExpense>?> GetSharedExpensesOfUser(Guid userId, string email)
         {
-            List<SharedExpense>? sharedExpenses = await _db.SharedExpenses.Include("CreatedByUser").Where(s => s.CreatedByUserId == userId || s.UserIds.Contains(userId)).ToListAsync();
-            return sharedExpenses;
+            // need to fix this (fetching all from memory -- huge)
+            // instead do Norm 
+            var allExpenses = await _db.SharedExpenses
+        .Include("CreatedByUser")
+        .ToListAsync();
+
+            return allExpenses
+                .Where(s => s.CreatedByUserId == userId || s.UserIds.Contains(email))
+                .ToList();
         }
     }
 }

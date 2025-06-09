@@ -22,8 +22,9 @@ namespace ExpenseTracker.Core.Domain.Repository_Interfaces
         /// Get Shared Expenses of User
         /// </summary>
         /// <param name="userId"></param>
+        /// <param name="email"></param>
         /// <returns></returns>
-        public Task<List<SharedExpense>?> GetSharedExpensesOfUser(Guid userId);
+        public Task<List<SharedExpense>?> GetSharedExpensesOfUser(Guid userId, string email);
 
         /// <summary>
         /// Get all Shared Expenses

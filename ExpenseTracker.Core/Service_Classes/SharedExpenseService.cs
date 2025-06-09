@@ -26,7 +26,7 @@ namespace ExpenseTracker.Core.Service_Classes
          * in participants list
          */
 
-        private async Task<bool> CheckIfUserIsValid(List<Guid> userIds)
+        private async Task<bool> CheckIfUserIsValid(List<string> userIds)
         {
             if (!userIds.Any())
             {
@@ -35,7 +35,7 @@ namespace ExpenseTracker.Core.Service_Classes
 
             foreach (var id in userIds)
             {
-                UserResponse? userResponse = await _userService.GetUserById(id);
+                UserResponse? userResponse = await _userService.GetUserByEmail(id);
                 if (userResponse == null)
                 {
                     return false;
@@ -79,14 +79,14 @@ namespace ExpenseTracker.Core.Service_Classes
             }
 
             // check if added users are unique
-            HashSet<Guid> users = new HashSet<Guid>(request.UserIds);
+            HashSet<string> users = new HashSet<string>(request.UserIds);
             if (users.Count != request.UserIds.Count)
             {
                 throw new ArgumentException("Duplicate Users found!!", nameof(request.UserIds));
             }
 
             // check if created by user added himself
-            if (users.Contains(request.CreatedByUserId))
+            if (users.Contains(userResponse.Email))
             {
                 throw new ArgumentException("You cannot add yourself!!", nameof(request.CreatedByUserId));
             }
@@ -173,7 +173,8 @@ namespace ExpenseTracker.Core.Service_Classes
                 throw new ArgumentException("User doesnot exists!!", nameof(userId));
             }
 
-            var sharedExpenses = await _sharedExpenseRepository.GetSharedExpensesOfUser(userId);
+            // if he exists in any shared expenses or he is the creator
+            var sharedExpenses = await _sharedExpenseRepository.GetSharedExpensesOfUser(userId, userResponse.Email);
             if(sharedExpenses == null)
             {
                 return new List<SharedExpenseResponse>();
@@ -206,7 +207,8 @@ namespace ExpenseTracker.Core.Service_Classes
             expenseResponses.AddRange(await _expenseService.GetExpensesOfUser(sharedExpense.CreatedByUserId));
             foreach(var id in sharedExpense.UserIds)
             {
-                expenseResponses.AddRange(await _expenseService.GetExpensesOfUser(id));
+                var user = await _userService.GetUserByEmail(id);
+                expenseResponses.AddRange(await _expenseService.GetExpensesOfUser(user.UserId));
             }
 
             return expenseResponses;
